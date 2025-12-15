@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>KitchenKonnect Auth Test</title>
+</head>
+<body>
+  <h1>Auth Test</h1>
+  <div>
+    <h2>Register</h2>
+    <input id="reg-username" placeholder="username"><br>
+    <input id="reg-email" placeholder="email"><br>
+    <input id="reg-password" placeholder="password" type="password"><br>
+    <button id="btn-register">Register</button>
+    <pre id="reg-result"></pre>
+  </div>
+
+  <div>
+    <h2>Login (token)</h2>
+    <input id="login-username" placeholder="username"><br>
+    <input id="login-password" placeholder="password" type="password"><br>
+    <button id="btn-login">Get Token</button>
+    <pre id="login-result"></pre>
+  </div>
+
+  <div>
+    <h2>Get /api/auth/me/</h2>
+    <button id="btn-me">Get Me</button>
+    <pre id="me-result"></pre>
+  </div>
+
+  <script>
+    const apiBase = 'http://127.0.0.1:8000';
+    document.getElementById('btn-register').onclick = async () => {
+      const username = document.getElementById('reg-username').value;
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      const res = await fetch(apiBase + '/api/auth/register/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username, email, password})});
+      const txt = await res.text();
+      document.getElementById('reg-result').textContent = res.status + '\n' + txt;
+    }
+
+    document.getElementById('btn-login').onclick = async () => {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      const res = await fetch(apiBase + '/api/auth/token/', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username, password})});
+      let txt = await res.text();
+      document.getElementById('login-result').textContent = res.status + '\n' + txt;
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('kk_access', data.access);
+        localStorage.setItem('kk_refresh', data.refresh);
+      }
+    }
+
+    document.getElementById('btn-me').onclick = async () => {
+      const token = localStorage.getItem('kk_access');
+      const res = await fetch(apiBase + '/api/auth/me/', {headers: token? {'Authorization':'Bearer '+token}: {}});
+      const txt = await res.text();
+      document.getElementById('me-result').textContent = res.status + '\n' + txt;
+    }
+  </script>
+</body>
+</html>
