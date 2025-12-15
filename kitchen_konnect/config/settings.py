@@ -157,13 +157,22 @@ MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # Django REST Framework
+DEFAULT_AUTH_CLASSES = [
+    'rest_framework.authentication.SessionAuthentication',
+    'rest_framework.authentication.BasicAuthentication',
+]
+# Detect simplejwt availability without importing it (avoid triggering package-level imports)
+import importlib.util
+if importlib.util.find_spec('rest_framework_simplejwt') is not None:
+    DEFAULT_AUTH_CLASSES = [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ]
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': DEFAULT_AUTH_CLASSES,
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
