@@ -27,8 +27,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-replace-me-for-production')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+# DEBUG setting (development)
+# ----------------------------------------------------------------------------
+# For development we enable Django's debug mode so detailed tracebacks
+# are rendered in the browser when an exception (HTTP 500) occurs. This
+# makes it much easier to diagnose problems while developing locally.
+#
+# WARNING: Never enable DEBUG=True in production. It exposes sensitive
+# information about the application and environment.
+#
+# If you prefer using an environment variable, revert this change and set
+# `DEBUG = os.getenv('DEBUG', 'True') == 'True'` instead.
+DEBUG = True
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
 
@@ -46,6 +56,9 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'corsheaders',
+
+    # DRF token auth
+    'rest_framework.authtoken',
 
     # Local apps
     'users',
@@ -172,13 +185,37 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': DEFAULT_AUTH_CLASSES,
+    'DEFAULT_AUTHENTICATION_CLASSES': DEFAULT_AUTH_CLASSES + [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
 
+# djangorestframework-simplejwt settings (if installed)
+from datetime import timedelta
+import importlib
+if importlib.util.find_spec('rest_framework_simplejwt') is not None:
+    # sensible defaults; override with env vars in production
+    SIMPLE_JWT = {
+        'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('JWT_ACCESS_MINUTES', '5'))),
+        'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_DAYS', '7'))),
+        'ROTATE_REFRESH_TOKENS': False,
+        'BLACKLIST_AFTER_ROTATION': False,
+        'AUTH_HEADER_TYPES': ('Bearer', 'Token'),
+        'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    }
+
+
 # CORS
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
+
+# Allow credentials (cookies) to be sent cross-origin when using session auth
+CORS_ALLOW_CREDENTIALS = os.getenv('CORS_ALLOW_CREDENTIALS', 'True') == 'True'
+
+# Optionally configure specific allowed origins via env var: comma-separated list
+if not CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

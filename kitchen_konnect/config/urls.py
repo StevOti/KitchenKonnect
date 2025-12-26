@@ -16,10 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from .views import csrf_token_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
+    # DRF session auth (login/logout) for browsable API and session endpoints
+    path('api-auth/', include('rest_framework.urls')),
+    path('api/csrf/', csrf_token_view),
     path('api/recipes/', include('recipes.urls')),
     path('api/health/', include('health.urls')),
 ]
