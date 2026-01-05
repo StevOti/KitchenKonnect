@@ -1,12 +1,25 @@
 from django.urls import path
 from .views import RegisterView, UserDetailView
 from rest_framework.authtoken.views import obtain_auth_token
+from .views import NutritionistArea, RegulatorArea, AdminArea
+from .views import AdminUserList, AdminUserUpdate
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('me/', UserDetailView.as_view(), name='user-detail'),
     # Simple token endpoint (DRF authtoken)
     path('token/', obtain_auth_token, name='api_token_auth'),
+]
+
+urlpatterns += [
+    path('nutritionist-area/', NutritionistArea.as_view(), name='nutritionist-area'),
+    path('regulator-area/', RegulatorArea.as_view(), name='regulator-area'),
+    path('admin-area/', AdminArea.as_view(), name='admin-area'),
+]
+
+urlpatterns += [
+    path('admin/users/', AdminUserList.as_view(), name='admin-user-list'),
+    path('admin/users/<int:pk>/', AdminUserUpdate.as_view(), name='admin-user-update'),
 ]
 
 try:

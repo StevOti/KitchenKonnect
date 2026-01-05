@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom'
 import Login from './Login'
 import Register from './Register'
 import Home from './Home'
+import AdminUsers from './AdminUsers'
 
 const API_BASE = 'http://127.0.0.1:8000'
 
@@ -88,8 +89,9 @@ export default function App() {
       ) : (
         <Routes>
           <Route path="/" element={<Login onLogin={handleLogin} />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/register" element={<Register onLogin={handleLogin} />} />
           <Route path="/home" element={<Home user={user} onLogout={handleLogout} />} />
+          <Route path="/admin/users" element={<AdminUsers user={user} />} />
         </Routes>
       )}
     </div>
