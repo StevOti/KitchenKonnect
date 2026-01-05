@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import dj_database_url
+# commented out dj_database_url import to force default sqlite during local development
+# import dj_database_url
 
 # Load environment variables from .env (if present)
 load_dotenv(Path(__file__).resolve().parent.parent / '.env')
@@ -119,9 +120,25 @@ DATABASES = {
 
 # Use DATABASE_URL if provided (recommended for production)
 DATABASE_URL = os.getenv('DATABASE_URL')
-if DATABASE_URL:
-    # Parse the DATABASE_URL and require SSL for managed providers like Supabase
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+# The DATABASE_URL override is commented out so the project uses the default
+# local sqlite configuration during development. To enable a remote DB,
+# uncomment the block below and ensure `dj_database_url` is installed and
+# imported above.
+# if DATABASE_URL:
+#     # Parse the DATABASE_URL and require SSL for managed providers like Supabase
+#     DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+
+# --- Local override: ensure default sqlite is used for development ---
+# The following explicit `DATABASES` assignment forces the default Django
+# sqlite backend regardless of any `DATABASE_URL` environment variable.
+# This was added to make local development deterministic and to quickly
+# revert DB changes introduced earlier.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 
 # Password validation
@@ -177,7 +194,12 @@ DEFAULT_AUTH_CLASSES = [
 # Detect simplejwt availability without importing it (avoid triggering package-level imports)
 import importlib.util
 if importlib.util.find_spec('rest_framework_simplejwt') is not None:
+    # Ensure TokenAuthentication runs before JWTAuthentication so DRF token
+    # keys (simple string tokens) are accepted. If JWTAuthentication runs
+    # first it will attempt to parse non-JWT tokens and raise an error,
+    # preventing TokenAuthentication from being tried.
     DEFAULT_AUTH_CLASSES = [
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
 
