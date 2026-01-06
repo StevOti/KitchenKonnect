@@ -122,3 +122,25 @@ Security / env note
 - This repo now ignores `.env` via `.gitignore`. If you committed `.env` previously, remove it from the repo history and rotate secrets.
 
 If anything above looks wrong or you'd like a different commit history, tell me and I can squash or reword commits before pushing.
+
+Auth / Production Checklist
+---------------------------
+- **Dependencies:** ensure `djangorestframework-simplejwt` is installed in production (already listed in `kitchen_konnect/requirements.txt`).
+- **Environment variables:** set secure values in environment or secret store (examples): `SECRET_KEY`, `DATABASE_URL`, `DJANGO_ALLOWED_HOSTS`, `REDIS_URL` (if using token blacklisting), `SIMPLE_JWT_SIGNING_KEY` (optional if rotating keys), and any cloud storage keys.
+- **Token endpoints & usage:** the API supports both JWT (preferred) and DRF Token fallback. In production, prefer JWT (obtain at `POST /api/auth/token/`, refresh at `POST /api/auth/token/refresh/`).
+- **HTTPS & Cookies:** enable `SECURE_SSL_REDIRECT = True`, `SESSION_COOKIE_SECURE = True`, and `CSRF_COOKIE_SECURE = True` so tokens/cookies are only sent over HTTPS.
+- **CORS & Allowed Hosts:** set `CORS_ALLOWED_ORIGINS` to your frontend origin(s) and configure `ALLOWED_HOSTS` appropriately.
+- **Token rotation & blacklisting:** consider enabling token rotation and blacklist (via `django-redis` + `simplejwt` settings) if you need immediate revoke behavior.
+- **Key rotation:** if you use asymmetric signing (RSA), plan and automate key rotation; for HMAC signing keep `SIMPLE_JWT_SIGNING_KEY` secret and rotate periodically.
+- **Rate limiting & brute-force protection:** add rate-limiting on auth endpoints (via `django-ratelimit` or API gateway) to mitigate credential stuffing.
+- **Logging & monitoring:** log auth failures, suspicious IPs, and set up alerts for repeated failures.
+- **Database backups & secrets rotation:** ensure DB backups are scheduled and secrets (DB passwords, API keys) are rotated per policy.
+
+Quick deploy checklist
+----------------------
+- Confirm required packages are installed: `pip install -r kitchen_konnect/requirements.txt`.
+- Set environment variables in your host (or use a secrets manager) before starting the app.
+- Run migrations and any one-off commands: `python manage.py migrate && python manage.py sync_groups`.
+- Verify token endpoints in a staging environment and test login/refresh flows before promoting to production.
+
+If you want, I can add a `DEPLOYMENT.md` with exact sample environment variable values and a small checklist for rotating JWT keys and enabling token blacklisting.
