@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from .serializers import (
 	RegisterSerializer,
 	UserSerializer,
+	ProfileSerializer,
 	AdminUserSerializer,
 	VerificationRequestSerializer,
 )
@@ -60,7 +61,8 @@ class RegisterView(generics.CreateAPIView):
 
 
 class UserDetailView(generics.RetrieveAPIView):
-	serializer_class = UserSerializer
+	# Expose role/admin_level for the authenticated user's profile
+	serializer_class = ProfileSerializer
 	permission_classes = [permissions.IsAuthenticated]
 
 	def get_object(self):

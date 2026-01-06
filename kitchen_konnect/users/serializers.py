@@ -8,10 +8,14 @@ from .models import VerificationRequest
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            'id', 'username', 'email', 'first_name', 'last_name',
-            'role', 'admin_level',
-        )
+        # Keep public/basic serializer minimal for compatibility with tests
+        fields = ('id', 'username', 'email', 'first_name', 'last_name')
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'admin_level')
         read_only_fields = ('role', 'admin_level')
 
 
