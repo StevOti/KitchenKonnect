@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import RegisterView, UserDetailView
+from rest_framework.authtoken.views import obtain_auth_token
 from .views import NutritionistArea, RegulatorArea, AdminArea
 from .views import AdminUserList, AdminUserUpdate
 from .views import VerificationRequestCreate, VerificationRequestList, VerificationRequestReview
@@ -7,6 +8,8 @@ from .views import VerificationRequestCreate, VerificationRequestList, Verificat
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('me/', UserDetailView.as_view(), name='user-detail'),
+    # Simple token endpoint (DRF authtoken)
+    path('token/', obtain_auth_token, name='api_token_auth'),
 ]
 
 urlpatterns += [
@@ -26,8 +29,8 @@ urlpatterns += [
     path('verification/requests/<int:pk>/', VerificationRequestReview.as_view(), name='verification-review'),
 ]
 
-# Prefer SimpleJWT endpoints when available; fall back to DRF token if not.
 try:
+    # include JWT token endpoints only if simplejwt is installed
     from rest_framework_simplejwt.views import (
         TokenObtainPairView,
         TokenRefreshView,
@@ -38,9 +41,5 @@ try:
         path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     ]
 except Exception:
-    # simplejwt not available — register DRF authtoken endpoint
-    from rest_framework.authtoken.views import obtain_auth_token
-
-    urlpatterns += [
-        path('token/', obtain_auth_token, name='api_token_auth'),
-    ]
+    # simplejwt not available; token endpoints will not be registered
+    pass
