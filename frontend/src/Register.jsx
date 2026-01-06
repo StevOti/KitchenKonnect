@@ -36,7 +36,11 @@ export default function Register({onLogin}) {
       const data = await res.json()
       if (!res.ok) throw new Error(JSON.stringify(data))
       // registration returned payload; try to auto-login with returned token
-      const token = data.token || data.access || data.key
+      // store tokens if returned (support JWT pair or DRF token)
+      const token = data.access || data.token || data.key
+      if (data.refresh) {
+        try { localStorage.setItem('__KK_REFRESH', data.refresh) } catch (e) {}
+      }
       if (token) {
         try {
           window.__KK_TOKEN = token

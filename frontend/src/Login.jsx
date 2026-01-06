@@ -19,8 +19,17 @@ export default function Login({onLogin}) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(JSON.stringify(data))
-      // support multiple token response formats: {'token':...}, {'access':...}
-      const token = data.token || data.access || data.key
+      // support multiple token response formats: {'token':...}, {'access':...,'refresh':...}
+      let token = null
+      if (data.access) {
+        // JWT flow
+        token = data.access
+        try { localStorage.setItem('__KK_REFRESH', data.refresh || '') } catch (e) {}
+      } else if (data.token) {
+        token = data.token
+      } else if (data.key) {
+        token = data.key
+      }
       if (!token) throw new Error('no token in response')
       window.__KK_TOKEN = token
       try { localStorage.setItem('__KK_TOKEN', token) } catch(e) {}

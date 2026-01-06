@@ -33,14 +33,43 @@ export default function App() {
     if (payload && payload.exp) {
       const now = Math.floor(Date.now() / 1000)
       if (payload.exp < now) {
-        return false
+        // token expired; try refresh if available
+        const refresh = localStorage.getItem('__KK_REFRESH') || window.__KK_REFRESH
+        if (refresh) {
+          try {
+            const rres = await fetch(`${API_BASE}/api/auth/token/refresh/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refresh })
+            })
+            if (rres.ok) {
+              const rdata = await rres.json()
+              if (rdata.access) {
+                token = rdata.access
+                window.__KK_TOKEN = token
+                try { localStorage.setItem('__KK_TOKEN', token) } catch (e) {}
+                if (rdata.refresh) try { localStorage.setItem('__KK_REFRESH', rdata.refresh) } catch (e) {}
+              } else {
+                return false
+              }
+            } else {
+              return false
+            }
+          } catch (e) {
+            return false
+          }
+        } else {
+          return false
+        }
       }
     }
     try {
       const headers = {}
-      // Use DRF "Token" prefix which is accepted by TokenAuthentication
-      // and by SimpleJWT when `AUTH_HEADER_TYPES` includes 'Token'.
-      headers['Authorization'] = `Token ${token}`
+      // Auto-detect token type: JWTs have dot-separated parts.
+      // Send `Bearer` for JWT access tokens, `Token` for DRF TokenAuth keys.
+      const looksLikeJwt = typeof token === 'string' && token.split('.').length >= 2
+      if (looksLikeJwt) headers['Authorization'] = `Bearer ${token}`
+      else headers['Authorization'] = `Token ${token}`
       const res = await fetch(`${API_BASE}/api/auth/me/`, { headers })
       if (!res.ok) return false
       const data = await res.json()
