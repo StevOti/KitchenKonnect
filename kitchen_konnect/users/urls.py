@@ -3,6 +3,7 @@ from .views import RegisterView, UserDetailView
 from rest_framework.authtoken.views import obtain_auth_token
 from .views import NutritionistArea, RegulatorArea, AdminArea
 from .views import AdminUserList, AdminUserUpdate
+from .views import VerificationRequestCreate, VerificationRequestList, VerificationRequestReview
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -20,6 +21,12 @@ urlpatterns += [
 urlpatterns += [
     path('admin/users/', AdminUserList.as_view(), name='admin-user-list'),
     path('admin/users/<int:pk>/', AdminUserUpdate.as_view(), name='admin-user-update'),
+]
+
+urlpatterns += [
+    path('verification/', VerificationRequestCreate.as_view(), name='verification-create'),
+    path('verification/requests/', VerificationRequestList.as_view(), name='verification-list'),
+    path('verification/requests/<int:pk>/', VerificationRequestReview.as_view(), name='verification-review'),
 ]
 
 try:

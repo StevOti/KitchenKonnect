@@ -4,6 +4,10 @@ import Login from './Login'
 import Register from './Register'
 import Home from './Home'
 import AdminUsers from './AdminUsers'
+import AdminVerifications from './AdminVerifications'
+import { PublicPage, AdminOnly, NutritionistOnly, RegulatorOnly } from './RolePages'
+import { Link } from 'react-router-dom'
+import ToastContainer from './Toasts'
 
 const API_BASE = 'http://127.0.0.1:8000'
 
@@ -84,6 +88,16 @@ export default function App() {
   return (
     <div style={{fontFamily: 'sans-serif', padding: 20}}>
       <h1>KitchenKonnect — Auth Test</h1>
+      <div style={{marginBottom:12}}>
+        <Link to="/home" style={{marginRight:8}}>Home</Link>
+        <Link to="/public" style={{marginRight:8}}>Public</Link>
+        <Link to="/admin/users" style={{marginRight:8}}>Manage Users</Link>
+        <Link to="/admin/verifications" style={{marginRight:8}}>Verifications</Link>
+        <Link to="/admin-only" style={{marginRight:8}}>Admin Page</Link>
+        <Link to="/nutritionist-only" style={{marginRight:8}}>Nutritionist Page</Link>
+        <Link to="/regulator-only" style={{marginRight:8}}>Regulator Page</Link>
+      </div>
+      <ToastContainer />
       {loading ? (
         <div>Loading...</div>
       ) : (
@@ -92,6 +106,11 @@ export default function App() {
           <Route path="/register" element={<Register onLogin={handleLogin} />} />
           <Route path="/home" element={<Home user={user} onLogout={handleLogout} />} />
           <Route path="/admin/users" element={<AdminUsers user={user} />} />
+          <Route path="/admin/verifications" element={<AdminVerifications user={user} />} />
+          <Route path="/admin-only" element={<AdminOnly user={user} />} />
+          <Route path="/nutritionist-only" element={<NutritionistOnly user={user} />} />
+          <Route path="/regulator-only" element={<RegulatorOnly user={user} />} />
+          <Route path="/public" element={<PublicPage />} />
         </Routes>
       )}
     </div>

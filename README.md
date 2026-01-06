@@ -91,6 +91,31 @@ Recent changes
 - Token handling: client now supports DRF Token and JWT (`access`) responses and validates tokens before redirecting.
 - Backend: Supabase `DATABASE_URL` support and docs; compatibility shim applied for template context on Python 3.14.
 
+New (2026-01-06)
+-----------------
+- Role & groups: users are classified by `role` (`regular`, `nutritionist`, `regulator`, `admin`). Django `Group` membership is synchronized with `role` on user save (`users`, `regulators`, `admins`).
+- Regulators: `admin_level` minimum is now 50 so regulator users can access regulator/admin-level endpoints.
+- Group sync command: added management command `python manage.py sync_groups` (supports `--dry-run` and `--username`) to one-off sync existing DB rows into groups.
+- Frontend toasts: lightweight toast system added (`frontend/src/Toasts.jsx`) and wired to admin actions and verification flows.
+
+How to sync existing users into groups
+-------------------------------------
+Run a dry-run first to preview changes:
+```
+cd kitchen_konnect
+python manage.py sync_groups --dry-run
+```
+Apply changes:
+```
+python manage.py sync_groups
+```
+
+Notes
+-----
+- The `sync_groups` command creates/uses three groups: `users`, `regulators`, and `admins`.
+- Approving a verification request for a regulator will set the user's `admin_level` to at least 50.
+- No schema migration is necessary for these behavioral changes; they run at the application level.
+
 Security / env note
 -------------------
 - Do NOT commit your `.env` file. It may contain database passwords and other secrets.

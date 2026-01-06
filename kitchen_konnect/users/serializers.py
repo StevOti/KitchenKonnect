@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+from .models import VerificationRequest
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -58,3 +59,12 @@ class AdminUserSerializer(serializers.ModelSerializer):
                 instance.admin_level = 0
         instance.save()
         return instance
+
+
+class VerificationRequestSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = VerificationRequest
+        fields = ('id', 'user', 'requested_role', 'message', 'status', 'reviewed_by', 'reviewed_at', 'created_at')
+
