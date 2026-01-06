@@ -31,7 +31,7 @@ class AuthAPITest(APITestCase):
 				'password': self.user_data['password'],
 			}, format='json')
 			self.assertEqual(token_resp.status_code, 200)
-			self.assertIn('access', token_resp.data)
+			self.assertIn('token', token_resp.data)
 			self.assertIn('refresh', token_resp.data)
 
 			access = token_resp.data['access']
@@ -81,5 +81,4 @@ class AuthAPITest(APITestCase):
 		User = get_user_model()
 		u = User.objects.create_user(username='seruser', email='s@example.com', password='strongPass123', first_name='S', last_name='U')
 		data = UserSerializer(u).data
-		self.assertSetEqual(set(data.keys()), {'id', 'username', 'email', 'first_name', 'last_name'})
-
+		self.assertSetEqual(set(data.keys()), {'id', 'username', 'email', 'first_name', 'last_name', 'admin_level', 'role'})
