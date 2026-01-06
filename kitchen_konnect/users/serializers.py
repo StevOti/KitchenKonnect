@@ -8,11 +8,9 @@ from .models import VerificationRequest
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            'id', 'username', 'email', 'first_name', 'last_name',
-            'role', 'admin_level',
-        )
-        read_only_fields = ('role', 'admin_level')
+        # Public-facing user serializer used for `/me/` and public APIs.
+        # Keep this minimal to avoid leaking internal role/level metadata.
+        fields = ('id', 'username', 'email', 'first_name', 'last_name')
 
 
 class RegisterSerializer(serializers.ModelSerializer):

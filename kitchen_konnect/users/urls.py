@@ -4,7 +4,6 @@ from .views import NutritionistArea, RegulatorArea, AdminArea
 from .views import AdminUserList, AdminUserUpdate
 from .views import VerificationRequestCreate, VerificationRequestList, VerificationRequestReview
 
-# Base routes
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('me/', UserDetailView.as_view(), name='user-detail'),
@@ -26,9 +25,8 @@ urlpatterns += [
     path('verification/requests/', VerificationRequestList.as_view(), name='verification-list'),
     path('verification/requests/<int:pk>/', VerificationRequestReview.as_view(), name='verification-review'),
 ]
-
 try:
-    # Prefer SimpleJWT if available: register JWT endpoints under /token/
+    # Prefer SimpleJWT token endpoints when available
     from rest_framework_simplejwt.views import (
         TokenObtainPairView,
         TokenRefreshView,
@@ -39,12 +37,9 @@ try:
         path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     ]
 except Exception:
-    # Fall back to DRF TokenAuth endpoint when SimpleJWT is not installed
-    try:
-        from rest_framework.authtoken.views import obtain_auth_token
-        urlpatterns += [
-            path('token/', obtain_auth_token, name='api_token_auth'),
-        ]
-    except Exception:
-        # Neither token system available; skip registering token endpoints
-        pass
+    # Fall back to DRF TokenAuth if simplejwt is not installed
+    from rest_framework.authtoken.views import obtain_auth_token
+
+    urlpatterns += [
+        path('token/', obtain_auth_token, name='api_token_auth'),
+    ]
