@@ -1,24 +1,38 @@
-import React, { useState } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Link } from 'react-router-dom'
 import { HoveredLink, Menu, MenuItem, ProductItem } from "./navbar-menu"
 import { cn } from "../../lib/utils"
 
 export function NavbarDemo() {
+  const navRef = useRef(null)
+
+  useEffect(() => {
+    function update() {
+      const el = navRef.current
+      if (!el) return
+      const h = el.getBoundingClientRect().height
+      document.documentElement.style.setProperty('--kk-navbar-height', `${h}px`)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
   return (
     <div className="relative w-full">
-      <Navbar className="top-2" />
-      {/* Spacer to account for fixed navbar height so content isn't overlapped */}
-      <div className="pt-28 flex items-center justify-center">
+      <Navbar ref={navRef} className="top-2" />
+      {/* Spacer uses CSS variable set from measured navbar height */}
+      <div style={{ paddingTop: 'var(--kk-navbar-height, 112px)' }} className="flex items-center justify-center">
         <p className="text-black">The Navbar will show on top of the page</p>
       </div>
     </div>
   )
 }
 
-function Navbar({ className }) {
+const Navbar = React.forwardRef(function Navbar({ className }, ref) {
   const [active, setActive] = useState(null)
   return (
-    <div className={cn("fixed top-10 inset-x-0 max-w-4xl mx-auto z-50 px-4", className)}>
+    <div ref={ref} className={cn("fixed top-10 inset-x-0 max-w-4xl mx-auto z-50 px-4", className)}>
       <div className="flex items-center justify-between">
         <div className="flex-1 flex justify-center">
           <Menu setActive={setActive}>
