@@ -13,7 +13,7 @@ body {
 	margin: 0;
 	background: var(--bg);
 	color: var(--text);
-	font-family: "Nimbus Mono", "Nimbus Mono PS", "NimbusMono", "Courier New", monospace;
+	font-family: 'Courier New', Courier, monospace;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
