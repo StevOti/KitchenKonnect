@@ -1,6 +1,6 @@
 import React, { useState } from "react"
-import { HoveredLink, Menu, MenuItem, ProductItem } from "~/components/ui/navbar-menu"
-import { cn } from "~/lib/utils"
+import { HoveredLink, Menu, MenuItem, ProductItem } from "./navbar-menu"
+import { cn } from "../../lib/utils"
 
 export function NavbarDemo() {
   return (

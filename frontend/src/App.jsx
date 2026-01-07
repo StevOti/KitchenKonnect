@@ -8,6 +8,7 @@ import AdminVerifications from './AdminVerifications'
 import { PublicPage, AdminOnly, NutritionistOnly, RegulatorOnly } from './RolePages'
 import { Link } from 'react-router-dom'
 import ToastContainer from './Toasts'
+import { NavbarDemo } from './components/ui/demo'
 
 const API_BASE = 'http://127.0.0.1:8000'
 
@@ -116,6 +117,7 @@ export default function App() {
 
   return (
     <div style={{fontFamily: 'sans-serif', padding: 20}}>
+      <NavbarDemo />
       <h1>KitchenKonnect — Auth Test</h1>
       <div style={{marginBottom:12}}>
         <Link to="/home" style={{marginRight:8}}>Home</Link>
