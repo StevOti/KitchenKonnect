@@ -16,7 +16,7 @@ export function AdminOnly({ user }) {
   return (
     <div>
       <h2>Admin Page</h2>
-      <p>Only admins (admin_level >= 50) can see this.</p>
+      <p>Only admins (admin_level &gt;= 50) can see this.</p>
     </div>
   )
 }
