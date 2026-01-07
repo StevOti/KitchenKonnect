@@ -1,7 +1,7 @@
-/* Use Nimbus Mono as the primary UI font. If not available locally,
-	 fall back to common monospace fonts. To self-host Nimbus Mono,
-	 add @font-face declarations or serve via CDN and ensure font files
-	 are included in your deployment. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root{
 	--bg: #f7f7f8;
 	--text: #111;

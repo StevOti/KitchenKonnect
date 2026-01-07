@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { HoveredLink, Menu, MenuItem, ProductItem } from "./navbar-menu";
+import React, { useState } from "react"
+import { HoveredLink, Menu, MenuItem, ProductItem } from "~/components/ui/navbar-menu"
+import { cn } from "~/lib/utils"
 
 export function NavbarDemo() {
   return (
@@ -7,13 +8,13 @@ export function NavbarDemo() {
       <Navbar className="top-2" />
       <p className="text-black">The Navbar will show on top of the page</p>
     </div>
-  );
+  )
 }
 
 function Navbar({ className }) {
-  const [active, setActive] = useState(null);
+  const [active, setActive] = useState(null)
   return (
-    <div className={"fixed top-10 inset-x-0 max-w-2xl mx-auto z-50 " + (className || "") }>
+    <div className={cn("fixed top-10 inset-x-0 max-w-2xl mx-auto z-50", className)}>
       <Menu setActive={setActive}>
         <MenuItem setActive={setActive} active={active} item="Services">
           <div className="flex flex-col space-y-4 text-sm">
@@ -28,14 +29,26 @@ function Navbar({ className }) {
             <ProductItem
               title="Algochurn"
               href="https://algochurn.com"
-              src="https://images.unsplash.com/photo-1522204509399-0cf3de70c4f1"
+              src="https://images.unsplash.com/photo-1545235617-9465c3d3a0a6?w=800"
               description="Prepare for tech interviews like never before."
             />
             <ProductItem
               title="Tailwind Master Kit"
               href="https://tailwindmasterkit.com"
-              src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
+              src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800"
               description="Production ready Tailwind css components for your next project"
+            />
+            <ProductItem
+              title="Moonbeam"
+              href="https://gomoonbeam.com"
+              src="https://images.unsplash.com/photo-1509395176047-4a66953fd231?w=800"
+              description="Never write from scratch again. Go from idea to blog in minutes."
+            />
+            <ProductItem
+              title="Rogue"
+              href="https://userogue.com"
+              src="https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=800"
+              description="Respond to government RFPs, RFIs and RFQs 10x faster using AI"
             />
           </div>
         </MenuItem>
@@ -49,5 +62,5 @@ function Navbar({ className }) {
         </MenuItem>
       </Menu>
     </div>
-  );
+  )
 }

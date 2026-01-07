@@ -1,6 +1,6 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import React from "react"
+import { motion } from "framer-motion"
+import { Link } from "react-router-dom"
 
 const transition = {
   type: "spring",
@@ -9,7 +9,7 @@ const transition = {
   stiffness: 100,
   restDelta: 0.001,
   restSpeed: 0.001,
-};
+}
 
 export const MenuItem = ({ setActive, active, item, children }) => {
   return (
@@ -42,38 +42,38 @@ export const MenuItem = ({ setActive, active, item, children }) => {
         </motion.div>
       )}
     </div>
-  );
-};
+  )
+}
 
 export const Menu = ({ setActive, children }) => {
   return (
     <nav
       onMouseLeave={() => setActive(null)}
-      className="relative rounded-full border bg-white shadow-input flex justify-center space-x-4 px-8 py-6"
+      className="relative rounded-full bg-white shadow-input flex justify-center space-x-4 px-8 py-6"
     >
       {children}
     </nav>
-  );
-};
+  )
+}
 
 export const ProductItem = ({ title, description, href, src }) => {
   return (
-    <Link to={href} className="flex space-x-2">
+    <a href={href} className="flex space-x-2" target="_blank" rel="noreferrer">
       <img src={src} width={140} height={70} alt={title} className="flex-shrink-0 rounded-md shadow-2xl" />
       <div>
         <h4 className="text-xl font-bold mb-1 text-black">{title}</h4>
         <p className="text-neutral-700 text-sm max-w-[10rem]">{description}</p>
       </div>
-    </Link>
-  );
-};
+    </a>
+  )
+}
 
 export const HoveredLink = ({ children, ...rest }) => {
   return (
     <Link {...rest} className="text-neutral-700 hover:text-black">
       {children}
     </Link>
-  );
-};
+  )
+}
 
-export default {};
+export default Menu
