@@ -1,4 +1,33 @@
-body { margin: 0; background: #f7f7f8; color: #111 }
-#root { padding: 20px }
-input { padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px }
-button { padding: 8px 12px; border-radius: 4px; cursor: pointer }
+/* Use Nimbus Mono as the primary UI font. If not available locally,
+	 fall back to common monospace fonts. To self-host Nimbus Mono,
+	 add @font-face declarations or serve via CDN and ensure font files
+	 are included in your deployment. */
+:root{
+	--bg: #f7f7f8;
+	--text: #111;
+	--muted: #666;
+	--accent: #0b72ff;
+}
+html, body { height: 100%; }
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font-family: "Nimbus Mono", "Nimbus Mono PS", "NimbusMono", "Courier New", monospace;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+#root { padding: 20px; max-width: 980px; margin: 0 auto }
+input { padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-family: inherit }
+button { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; border: none; background: var(--accent); color: white }
+
+/* Basic responsive layout helpers */
+.container { padding: 16px; background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(16,24,40,0.04) }
+.row { display:flex; gap:12px; align-items:center }
+.col { flex:1 }
+.muted { color: var(--muted) }
+
+@media (max-width: 720px){
+	#root{ padding: 12px }
+	.row{ flex-direction: column; align-items: stretch }
+}

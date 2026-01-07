@@ -144,3 +144,9 @@ Quick deploy checklist
 - Verify token endpoints in a staging environment and test login/refresh flows before promoting to production.
 
 If you want, I can add a `DEPLOYMENT.md` with exact sample environment variable values and a small checklist for rotating JWT keys and enabling token blacklisting.
+
+Frontend font note
+------------------
+- The frontend is configured to prefer `Nimbus Mono` as the site font via `frontend/src/styles.css`.
+- If you want the exact Nimbus Mono font bundled, add `@font-face` rules and include the font files in your build, or host them on a CDN and reference them from `index.html`.
+- I can add a self-hosted font setup (font files + `@font-face`) if you provide the font files or a CDN URL.
