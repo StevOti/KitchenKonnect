@@ -118,16 +118,6 @@ export default function App() {
   return (
     <div style={{fontFamily: 'sans-serif', padding: 20}}>
       <NavbarDemo />
-      <h1>KitchenKonnect — Auth Test</h1>
-      <div style={{marginBottom:12}}>
-        <Link to="/home" style={{marginRight:8}}>Home</Link>
-        <Link to="/public" style={{marginRight:8}}>Public</Link>
-        <Link to="/admin/users" style={{marginRight:8}}>Manage Users</Link>
-        <Link to="/admin/verifications" style={{marginRight:8}}>Verifications</Link>
-        <Link to="/admin-only" style={{marginRight:8}}>Admin Page</Link>
-        <Link to="/nutritionist-only" style={{marginRight:8}}>Nutritionist Page</Link>
-        <Link to="/regulator-only" style={{marginRight:8}}>Regulator Page</Link>
-      </div>
       <ToastContainer />
       {loading ? (
         <div>Loading...</div>

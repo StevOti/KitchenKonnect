@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { Link } from 'react-router-dom'
 import { HoveredLink, Menu, MenuItem, ProductItem } from "./navbar-menu"
 import { cn } from "../../lib/utils"
 
@@ -14,8 +15,10 @@ export function NavbarDemo() {
 function Navbar({ className }) {
   const [active, setActive] = useState(null)
   return (
-    <div className={cn("fixed top-10 inset-x-0 max-w-2xl mx-auto z-50", className)}>
-      <Menu setActive={setActive}>
+    <div className={cn("fixed top-10 inset-x-0 max-w-4xl mx-auto z-50 px-4", className)}>
+      <div className="flex items-center justify-between">
+        <div className="flex-1 flex justify-center">
+          <Menu setActive={setActive}>
         <MenuItem setActive={setActive} active={active} item="Services">
           <div className="flex flex-col space-y-4 text-sm">
             <HoveredLink to="/web-dev">Web Development</HoveredLink>
@@ -60,7 +63,18 @@ function Navbar({ className }) {
             <HoveredLink to="/enterprise">Enterprise</HoveredLink>
           </div>
         </MenuItem>
-      </Menu>
+          </Menu>
+        </div>
+        <div className="hidden sm:flex space-x-4 ml-6">
+          <Link to="/home" className="text-sm text-neutral-800 hover:text-black">Home</Link>
+          <Link to="/public" className="text-sm text-neutral-800 hover:text-black">Public</Link>
+          <Link to="/admin/users" className="text-sm text-neutral-800 hover:text-black">Manage Users</Link>
+          <Link to="/admin/verifications" className="text-sm text-neutral-800 hover:text-black">Verifications</Link>
+          <Link to="/admin-only" className="text-sm text-neutral-800 hover:text-black">Admin Page</Link>
+          <Link to="/nutritionist-only" className="text-sm text-neutral-800 hover:text-black">Nutritionist Page</Link>
+          <Link to="/regulator-only" className="text-sm text-neutral-800 hover:text-black">Regulator Page</Link>
+        </div>
+      </div>
     </div>
   )
 }
