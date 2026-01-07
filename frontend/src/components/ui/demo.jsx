@@ -5,9 +5,12 @@ import { cn } from "../../lib/utils"
 
 export function NavbarDemo() {
   return (
-    <div className="relative w-full flex items-center justify-center">
+    <div className="relative w-full">
       <Navbar className="top-2" />
-      <p className="text-black">The Navbar will show on top of the page</p>
+      {/* Spacer to account for fixed navbar height so content isn't overlapped */}
+      <div className="pt-28 flex items-center justify-center">
+        <p className="text-black">The Navbar will show on top of the page</p>
+      </div>
     </div>
   )
 }
