@@ -26,22 +26,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-replace-me-for-production')
+SECRET_KEY = os.getenv('SECRET_KEY', '')
 
-# DEBUG setting (development)
-# ----------------------------------------------------------------------------
-# For development we enable Django's debug mode so detailed tracebacks
-# are rendered in the browser when an exception (HTTP 500) occurs. This
-# makes it much easier to diagnose problems while developing locally.
-#
-# WARNING: Never enable DEBUG=True in production. It exposes sensitive
-# information about the application and environment.
-#
-# If you prefer using an environment variable, revert this change and set
-# `DEBUG = os.getenv('DEBUG', 'True') == 'True'` instead.
-DEBUG = True
+# DEBUG setting
+# Default to False (production-safe). For local development set
+# DEBUG=True in your environment or a .env file.
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
+# Ensure a real SECRET_KEY is provided in production
+if not DEBUG and not SECRET_KEY:
+    raise RuntimeError('SECRET_KEY must be set in environment for production')
+
+# ALLOWED_HOSTS should be a comma-separated env var, e.g. "example.com,api.example.com"
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else (['localhost'] if DEBUG else [])
 
 
 # Application definition
@@ -60,7 +57,8 @@ INSTALLED_APPS = [
 
     # DRF token auth
     'rest_framework.authtoken',
-
+    # Optional security/lockout app
+    # If django-axes is installed, we'll enable it below.
     # Local apps
     'users',
     'health',
@@ -72,6 +70,11 @@ INSTALLED_APPS = [
 
 ]
 
+# Optionally enable SimpleJWT token blacklist app when simplejwt is installed
+import importlib.util as _il
+if _il.find_spec('rest_framework_simplejwt') is not None:
+    INSTALLED_APPS += ['rest_framework_simplejwt.token_blacklist']
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -79,9 +82,57 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Axes middleware inserted below if django-axes is available
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# If django-axes is available, enable it and configure defaults
+import importlib
+if importlib.util.find_spec('axes') is not None:
+    # add to installed apps if not present
+    if 'axes' not in INSTALLED_APPS:
+        INSTALLED_APPS.append('axes')
+    # insert axes middleware just after AuthenticationMiddleware
+    try:
+        idx = MIDDLEWARE.index('django.contrib.auth.middleware.AuthenticationMiddleware')
+        MIDDLEWARE.insert(idx + 1, 'axes.middleware.AxesMiddleware')
+    except ValueError:
+        MIDDLEWARE.insert(0, 'axes.middleware.AxesMiddleware')
+
+    # basic axes settings (override via env as needed)
+    from datetime import timedelta as _td
+    AXES_FAILURE_LIMIT = int(os.getenv('AXES_FAILURE_LIMIT', '5'))
+    AXES_COOLOFF_TIME = _td(minutes=int(os.getenv('AXES_COOLOFF_MINUTES', '30')))
+    AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = True
+    AXES_ONLY_USER_FAILURES = False
+    AXES_USE_USER_AGENT = False
+
+# Security hardening defaults for production
+# These will enable secure cookies, HSTS and other transport protections
+# when DEBUG is False. Override with explicit environment vars when needed.
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True' if not DEBUG else 'False') == 'True'
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True' if not DEBUG else 'False') == 'True'
+SESSION_COOKIE_HTTPONLY = os.getenv('SESSION_COOKIE_HTTPONLY', 'True') == 'True'
+CSRF_COOKIE_HTTPONLY = os.getenv('CSRF_COOKIE_HTTPONLY', 'False') == 'True'
+# Recommended SameSite for auth cookies (Lax prevents most CSRF while allowing top-level navigations)
+SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
+CSRF_COOKIE_SAMESITE = os.getenv('CSRF_COOKIE_SAMESITE', 'Lax')
+
+# Redirect HTTP to HTTPS in production if behind a TLS-terminating proxy
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True' if not DEBUG else 'False') == 'True'
+# HSTS
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000' if not DEBUG else '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True' if not DEBUG else 'False') == 'True'
+SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'True' if not DEBUG else 'False') == 'True'
+
+# If Django is behind a reverse proxy that sets X-Forwarded-Proto, enable this
+if os.getenv('USE_X_FORWARDED_PROTO', 'True' if not DEBUG else 'False') == 'True':
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Additional recommended HTTP security headers
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = os.getenv('X_FRAME_OPTIONS', 'DENY')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -210,6 +261,19 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': DEFAULT_AUTH_CLASSES + [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    # Throttling to protect auth endpoints; use ScopedRateThrottle on views
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '20/min',
+        'user': '200/min',
+        'login': os.getenv('RATE_LOGIN', '5/min'),
+        'register': os.getenv('RATE_REGISTER', '3/min'),
+        'refresh': os.getenv('RATE_REFRESH', '30/min'),
+    },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
@@ -222,24 +286,74 @@ if importlib.util.find_spec('rest_framework_simplejwt') is not None:
     SIMPLE_JWT = {
         'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('JWT_ACCESS_MINUTES', '5'))),
         'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_DAYS', '7'))),
-        'ROTATE_REFRESH_TOKENS': False,
-        'BLACKLIST_AFTER_ROTATION': False,
+        # Rotate refresh tokens and enable blacklist for safer revocation handling.
+        'ROTATE_REFRESH_TOKENS': os.getenv('JWT_ROTATE_REFRESH', 'True') == 'True',
+        'BLACKLIST_AFTER_ROTATION': os.getenv('JWT_BLACKLIST_AFTER_ROTATION', 'True') == 'True',
         'AUTH_HEADER_TYPES': ('Bearer', 'Token'),
         'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     }
 
 
 # CORS
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
+# Default: disallow all origins in production unless explicitly configured via env.
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True' if DEBUG else 'False') == 'True'
 
 # Allow credentials (cookies) to be sent cross-origin when using session auth
-CORS_ALLOW_CREDENTIALS = os.getenv('CORS_ALLOW_CREDENTIALS', 'True') == 'True'
+CORS_ALLOW_CREDENTIALS = os.getenv('CORS_ALLOW_CREDENTIALS', 'True' if DEBUG else 'False') == 'True'
 
 # Optionally configure specific allowed origins via env var: comma-separated list
 if not CORS_ALLOW_ALL_ORIGINS:
-    CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
+    cors_env = os.getenv('CORS_ALLOWED_ORIGINS')
+    if cors_env:
+        CORS_ALLOWED_ORIGINS = cors_env.split(',')
+    elif DEBUG:
+        # local dev defaults
+        CORS_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
+    else:
+        CORS_ALLOWED_ORIGINS = []
+
+# CSRF trusted origins — require explicit configuration in production.
+csrf_env = os.getenv('CSRF_TRUSTED_ORIGINS')
+if csrf_env:
+    CSRF_TRUSTED_ORIGINS = csrf_env.split(',')
+elif DEBUG:
+    CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
+else:
+    CSRF_TRUSTED_ORIGINS = []
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Logging: capture CSRF rejections for debugging and audit
+import logging
+LOG_DIR = BASE_DIR / 'logs'
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[%(asctime)s] %(levelname)s %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'csrf_file': {
+            'class': 'logging.FileHandler',
+            'filename': str(LOG_DIR / 'django_csrf.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django.security.csrf': {
+            'handlers': ['console', 'csrf_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    }
+}

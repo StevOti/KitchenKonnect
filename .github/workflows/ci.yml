@@ -29,3 +29,24 @@ jobs:
         run: |
           python manage.py migrate --noinput
           python manage.py test
+
+      - name: Start Django dev server in background
+        working-directory: kitchen_konnect
+        run: |
+          nohup python manage.py runserver 0.0.0.0:8000 >/tmp/server.log 2>&1 &
+
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -sSf http://127.0.0.1:8000/api/auth/csrf/ >/dev/null 2>&1; then
+              echo "server ready"; break
+            fi
+            echo "waiting for server..."; sleep 1
+          done
+
+      - name: Run integration test (non-cookie refresh)
+        working-directory: kitchen_konnect
+        env:
+          DEBUG: 'True'
+        run: |
+          python ../scripts/auth_integration_test.py

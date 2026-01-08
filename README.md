@@ -150,3 +150,30 @@ Frontend font note
 - The frontend is configured to prefer `Nimbus Mono` as the site font via `frontend/src/styles.css`.
 - If you want the exact Nimbus Mono font bundled, add `@font-face` rules and include the font files in your build, or host them on a CDN and reference them from `index.html`.
 - I can add a self-hosted font setup (font files + `@font-face`) if you provide the font files or a CDN URL.
+
+Authentication endpoints and client guidance
+-------------------------------------------
+
+Browser (recommended) flow — cookie-based refresh
+- `POST /api/auth/register/` — registers user, returns a short-lived `access` token in the JSON response and sets an HttpOnly `refresh` cookie.
+- `POST /api/auth/cookie/token/` — login endpoint that sets the `refresh` cookie and returns `access` in JSON.
+- `POST /api/auth/cookie/refresh/` — cookie-based refresh endpoint: reads `refresh` from an HttpOnly cookie, returns a new `access` and rotates the `refresh` cookie. This endpoint requires CSRF protection (client must provide a valid `X-CSRFToken` header matching the `csrftoken` cookie).
+
+Client guidance for browsers:
+- Store only the `access` token in-memory (do not persist to localStorage). Use the `refresh` cookie (HttpOnly) to obtain a new `access` when needed.
+- Ensure `credentials: 'include'` on `fetch`/XHR calls so cookies are sent.
+- Obtain CSRF token via `GET /api/auth/csrf/` (sets `csrftoken` cookie) and send `X-CSRFToken` header on mutating requests to cookie endpoints.
+- Production cookie security: `HttpOnly=True`, `Secure=True`, `SameSite=Lax` is recommended; use `SameSite=None` only for special cross-site deployments together with `Secure`.
+
+Non-browser / automated clients
+- `POST /api/auth/token/refresh/` — standard token-in-body refresh (for compatibility). This endpoint requires the `refresh` token in the request body and does not rely on cookies (not CSRF-protected). Only use this from trusted non-browser clients (CI, server-to-server, or native mobile apps).
+- `POST /api/auth/token/refresh-noncookie/` — non-cookie refresh endpoint added for non-browser clients; requires an `Authorization` header for additional assurance in deployments where you want to separate browser vs non-browser traffic.
+
+Security recommendations
+- Use the cookie-based flow for browser clients to protect refresh tokens from XSS.
+- Keep `ACCESS_TOKEN_LIFETIME` short (minutes), enable `ROTATE_REFRESH_TOKENS` and `BLACKLIST_AFTER_ROTATION` in `SIMPLE_JWT`.
+- In production set `CSRF_TRUSTED_ORIGINS` and `CORS_ALLOWED_ORIGINS` to the exact frontend origins (no wildcards), enable `SECURE_SSL_REDIRECT=True`, and set cookie flags to `Secure`.
+- Throttle auth endpoints (login/register/refresh) and monitor logs for suspicious activity.
+
+Testing note
+- For automated tests you may use the non-cookie refresh endpoint to validate rotation/blacklist without dealing with browser CSRF semantics. Do not use token-in-body refresh from browser JS in production unless you fully mitigate XSS risk.
